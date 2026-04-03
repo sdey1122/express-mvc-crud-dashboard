@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Restore Records</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body{
+  background: linear-gradient(135deg,#eef2ff,#f8fafc);
+  color:#0f172a;
+}
+
+/* HEADER */
+.header{
+  position:relative;
+  margin-bottom:40px;
+}
+
+.page-title{
+  text-align:center;
+  font-weight:600;
+}
+
+/* BACK BUTTON */
+.back-btn{
+  position:absolute;
+  right:0;
+  top:0;
+}
+
+/* CARD */
+.card-ui{
+  background:#ffffff;
+  border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.08);
+  padding:20px;
+}
+
+/* TABLE */
+.table{
+  color:#0f172a;
+}
+
+.table th{
+  background:#f1f5f9;
+}
+
+/* BUTTON */
+.btn{
+  border-radius:8px;
+}
+</style>
+</head>
+
+<body class="p-4">
+
+<div class="container">
+
+<!-- HEADER -->
+<div class="header">
+  <h3 class="page-title">Restore Records</h3>
+
+  <a href="/" class="btn btn-outline-dark btn-sm back-btn">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
+</div>
+
+<!-- TABLE -->
+<div class="card-ui">
+  <table class="table text-center align-middle">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>#</th>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% students.forEach((p,i)=>{ %>
+      <tr>
+        <td>****<%= p._id.toString().slice(-4) %></td>
+        <td><%= i+1 %></td>
+        <td><%= p.name %></td>
+        <td><%= p.phone %></td>
+        <td><%= p.email %></td>
+        <td>
+
+          <button class="btn btn-outline-success btn-sm"
+          onclick="handleRestore('<%= p._id %>', this)">
+          <i class="bi bi-arrow-counterclockwise"></i>
+          </button>
+
+          <button class="btn btn-outline-danger btn-sm"
+          onclick="handleHardDelete('<%= p._id %>', this)">
+          <i class="bi bi-trash"></i>
+          </button>
+
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+<!-- TOAST -->
+<div class="position-fixed top-0 end-0 p-3">
+<div id="toast" class="toast">
+<div class="toast-body" id="msg"></div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal fade" id="confirmModal">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content bg-dark text-white">
+<div class="modal-body" id="modalText"></div>
+<div class="modal-footer">
+<button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+<button class="btn btn-danger" id="confirmBtn">Confirm</button>
+</div>
+</div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// TOAST
+function showToast(message, type="success"){
+const toastEl = document.getElementById("toast");
+document.getElementById("msg").innerText = message;
+
+toastEl.className = "toast text-bg-" + (type==="success" ? "success" : "danger");
+
+new bootstrap.Toast(toastEl,{delay:1200}).show();
+}
+
+// MODAL
+const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
+let actionCallback = null;
+
+function confirmAction(text, callback){
+document.getElementById("modalText").innerText = text;
+actionCallback = callback;
+modal.show();
+}
+
+document.getElementById("confirmBtn").onclick = () => {
+modal.hide();
+if(actionCallback) actionCallback();
+};
+
+// RESTORE
+function handleRestore(id, btn){
+confirmAction("Restore this record?", async () => {
+try{
+const res = await fetch(`/students/restore/${id}?_method=PATCH`, { method:"POST" });
+const d = await res.json();
+
+if(d.success){
+showToast("Student restored successfully");
+btn.closest("tr").remove();
+}else showToast(d.message,"error");
+
+}catch{
+showToast("Something went wrong","error");
+}
+});
+}
+
+// HARD DELETE
+function handleHardDelete(id, btn){
+confirmAction("Do you want to permanently delete this record?", async () => {
+try{
+const res = await fetch(`/students/hard-delete/${id}?_method=DELETE`, { method:"POST" });
+const d = await res.json();
+
+if(d.success){
+showToast("Student deleted permanently");
+btn.closest("tr").remove();
+}else showToast(d.message,"error");
+
+}catch{
+showToast("Something went wrong","error");
+}
+});
+}
+</script>
+
+</body>
+</html>
