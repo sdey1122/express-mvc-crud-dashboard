@@ -160,7 +160,7 @@ if(actionCallback) actionCallback();
 
 // RESTORE
 function handleRestore(id, btn){
-confirmAction("Restore this record?", async () => {
+confirmAction("Do you want to restore this record?", async () => {
 try{
 const res = await fetch(`/students/restore/${id}?_method=PATCH`, { method:"POST" });
 const d = await res.json();
